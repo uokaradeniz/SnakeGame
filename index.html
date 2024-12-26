@@ -70,13 +70,14 @@
             padding: 20px;
             border-radius: 10px;
             display: none;
-            animation: fadeIn 1.5s ease-out;
+            animation: fadeIn 0.5s ease-out;
         }
 
         @keyframes fadeIn {
             0% {
                 opacity: 0;
             }
+
             100% {
                 opacity: 1;
             }
@@ -86,9 +87,11 @@
             0% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.1);
             }
+
             100% {
                 transform: scale(1);
             }
@@ -130,11 +133,8 @@
         snake[0] = { x: 9 * box, y: 10 * box };
 
         let direction;
-        let food = {
-            x: Math.floor(Math.random() * 29 + 1) * box,
-            y: Math.floor(Math.random() * 19 + 1) * box
-        };
 
+        // create obstacles
         let obstacles = [];
         function generateObstacles() {
             obstacles = [];
@@ -146,6 +146,30 @@
                 obstacles.push(obstacle);
             }
         }
+
+        //check if food is overlapping with obstacles
+        function isFoodOverlappingObstacles(foodPosition, obstacles) {
+            for (let obstacle of obstacles) {
+                if (foodPosition.x === obstacle.x && foodPosition.y === obstacle.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        //place food randomly
+        function placeFood(snake, obstacles) {
+            let foodPosition;
+            do {
+                foodPosition = {
+                    x: Math.floor(Math.random() * canvas.width / box) * box,
+                    y: Math.floor(Math.random() * canvas.height / box) * box
+                };
+            } while (isFoodOverlappingObstacles(foodPosition, obstacles));
+            return foodPosition;
+        }
+
+        let food = placeFood(snake, obstacles);
 
         document.addEventListener('keydown', setDirection);
 
@@ -173,7 +197,7 @@
 
             document.getElementById('gameOverText').style.display = 'block';
 
-            clearInterval(game);  
+            clearInterval(game);
         }
 
         function draw() {
@@ -181,6 +205,7 @@
             document.getElementById('scoreText').innerHTML = "Score: " + score;
             document.getElementById('highscoreText').innerHTML = "Highscore: " + highscore;
 
+            //draw snake
             for (let i = 0; i < snake.length; i++) {
                 ctx.fillStyle = (i === 0) ? 'green' : (i % 2 === 0 ? 'blue' : 'orange');
                 ctx.beginPath();
@@ -194,10 +219,12 @@
                 ctx.stroke();
             }
 
+            // draw food
             ctx.fillStyle = 'red';
             ctx.beginPath();
             ctx.fillRect(food.x, food.y, box, box);
 
+            // draw obstacles
             ctx.fillStyle = 'black';
             for (let i = 0; i < obstacles.length; i++) {
                 ctx.fillRect(obstacles[i].x, obstacles[i].y, box, box);
@@ -211,13 +238,15 @@
             if (direction === 'RIGHT') snakeX += box;
             if (direction === 'DOWN') snakeY += box;
 
+            // snake eats the food
             if (snakeX === food.x && snakeY === food.y) {
                 food = {
                     x: Math.floor(Math.random() * 29 + 1) * box,
                     y: Math.floor(Math.random() * 19 + 1) * box
                 };
                 score++;
-
+                
+                //increase snake speed after every 5 points
                 if (score % 5 === 0) {
                     speed -= 10;
                     clearInterval(game);
@@ -234,6 +263,7 @@
                 return;
             }
 
+            //check if snake collades with itself or the wall
             if (snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)) {
                 gameOver();
                 return;
@@ -242,7 +272,7 @@
             snake.unshift(newHead);
         }
 
-        generateObstacles();
+        generateObstacles();  
 
         let game = setInterval(draw, speed);
     </script>
