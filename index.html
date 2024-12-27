@@ -105,6 +105,9 @@
 
 <body>
     <div id="gameDiv">
+        <audio id="foodSound" src="eat.mp3"></audio>
+        <audio id="gameOverSound" src="gameover.mp3"></audio>
+
         <div class="textDiv">
             <h1>Snake Game</h1>
         </div>
@@ -156,7 +159,7 @@
             }
             return false;
         }
-        
+
         //place food randomly
         function placeFood(snake, obstacles) {
             let foodPosition;
@@ -189,14 +192,19 @@
             return false;
         }
 
+        const foodSound = document.getElementById('foodSound');
+        const gameOverSound = document.getElementById('gameOverSound');
+
         function gameOver() {
             if (score > highscore) {
                 highscore = score;
                 localStorage.setItem('highscore', highscore);
             }
 
-            document.getElementById('gameOverText').style.display = 'block';
+            //play game over sound
+            gameOverSound.play();
 
+            document.getElementById('gameOverText').style.display = 'block';
             clearInterval(game);
         }
 
@@ -219,12 +227,12 @@
                 ctx.stroke();
             }
 
-            // draw food
+            //draw food
             ctx.fillStyle = 'red';
             ctx.beginPath();
             ctx.fillRect(food.x, food.y, box, box);
 
-            // draw obstacles
+            //draw obstacles
             ctx.fillStyle = 'black';
             for (let i = 0; i < obstacles.length; i++) {
                 ctx.fillRect(obstacles[i].x, obstacles[i].y, box, box);
@@ -238,14 +246,12 @@
             if (direction === 'RIGHT') snakeX += box;
             if (direction === 'DOWN') snakeY += box;
 
-            // snake eats the food
+            //snake eats the food
             if (snakeX === food.x && snakeY === food.y) {
-                food = {
-                    x: Math.floor(Math.random() * 29 + 1) * box,
-                    y: Math.floor(Math.random() * 19 + 1) * box
-                };
+                food = placeFood(snake, obstacles);
                 score++;
-                
+                foodSound.play(); //play sound effect for eating food
+
                 //increase snake speed after every 5 points
                 if (score % 5 === 0) {
                     speed -= 10;
@@ -258,12 +264,14 @@
 
             let newHead = { x: snakeX, y: snakeY };
 
+            //check collision with obstacles
             if (collision(newHead, obstacles)) {
+                gameOverSound.play(); //play collision sound effect
                 gameOver();
                 return;
             }
 
-            //check if snake collades with itself or the wall
+            //check if snake collides with itself or the wall
             if (snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)) {
                 gameOver();
                 return;
@@ -272,7 +280,7 @@
             snake.unshift(newHead);
         }
 
-        generateObstacles();  
+        generateObstacles();
 
         let game = setInterval(draw, speed);
     </script>
